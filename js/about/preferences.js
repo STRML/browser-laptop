@@ -37,6 +37,7 @@ const searchProviders = require('../data/searchProviders')
 const punycode = require('punycode')
 const moment = require('moment')
 const QRious = require('qrious')
+const niceware = require('niceware')
 moment.locale(navigator.language)
 
 const adblock = appConfig.resourceNames.ADBLOCK
@@ -1376,7 +1377,7 @@ class PaymentsTab extends ImmutableComponent {
 
 class SyncTab extends ImmutableComponent {
   get isSetup () {
-    return this.props.syncData.get('seed') instanceof Immutable.List
+    return this.props.syncData.get('seed') instanceof Immutable.List && this.props.syncData.get('seed').size === 32
   }
 
   get enabled () {
@@ -1410,7 +1411,32 @@ class SyncTab extends ImmutableComponent {
       size: 300,
       value: seed.toString('hex')
     })
-    return <img title='Brave sync QR code' src={qr.toDataURL()} />
+    return this.props.syncQRVisible
+      ? <div>
+        <div><Button l10nId='syncHideQR' className='whiteButton syncToggleButton' onClick={this.props.hideQR} /></div>
+        <img id='syncQR' title='Brave sync QR code' src={qr.toDataURL()} />
+      </div>
+      : <Button l10nId='syncShowQR' className='whiteButton syncToggleButton' onClick={this.props.showQR} />
+  }
+
+  get passphraseContent () {
+    if (!this.isSetup) {
+      return null
+    }
+    const seed = Buffer.from(this.props.syncData.get('seed').toJS())
+    const passphrase = niceware.bytesToPassphrase(seed)
+    const words = [
+      passphrase.slice(0, 4).join(' '),
+      passphrase.slice(4, 8).join(' '),
+      passphrase.slice(8, 12).join(' '),
+      passphrase.slice(12, 16).join(' ')
+    ]
+    return this.props.syncPassphraseVisible
+      ? <div>
+        <Button l10nId='syncHidePassphrase' className='whiteButton syncToggleButton' onClick={this.props.hidePassphrase} />
+        <pre id='syncPassphrase'>{words.join('\n')}</pre>
+      </div>
+      : <Button l10nId='syncShowPassphrase' className='whiteButton syncToggleButton' onClick={this.props.showPassphrase} />
   }
 
   get overlayContent () {
@@ -1419,8 +1445,9 @@ class SyncTab extends ImmutableComponent {
         <ol>
           <li data-l10n-id='syncNewDevice1' />
           <li data-l10n-id='syncNewDevice2' />
-          <li data-l10n-id='syncNewDevice3' />
           {this.qrcodeContent}
+          <li data-l10n-id='syncNewDevice3' />
+          {this.passphraseContent}
           <li data-l10n-id='syncNewDevice4' />
         </ol>
       </div>
@@ -1935,6 +1962,8 @@ class AboutPreferences extends React.Component {
       syncStartOverlayVisible: false,
       syncAddOverlayVisible: false,
       syncNewDeviceOverlayVisible: false,
+      syncQRVisible: false,
+      syncPassphraseVisible: false,
       preferenceTab: this.tabFromCurrentHash,
       hintNumber: this.getNextHintNumber(),
       languageCodes: Immutable.Map(),
@@ -2097,6 +2126,28 @@ class AboutPreferences extends React.Component {
           syncStartOverlayVisible={this.state.syncStartOverlayVisible}
           syncAddOverlayVisible={this.state.syncAddOverlayVisible}
           syncNewDeviceOverlayVisible={this.state.syncNewDeviceOverlayVisible}
+          syncQRVisible={this.state.syncQRVisible}
+          showQR={() => {
+            this.setState({
+              syncQRVisible: true
+            })
+          }}
+          hideQR={() => {
+            this.setState({
+              syncQRVisible: false
+            })
+          }}
+          syncPassphraseVisible={this.state.syncPassphraseVisible}
+          showPassphrase={() => {
+            this.setState({
+              syncPassphraseVisible: true
+            })
+          }}
+          hidePassphrase={() => {
+            this.setState({
+              syncPassphraseVisible: false
+            })
+          }}
         />
         break
       case preferenceTabs.SHIELDS:

@@ -40,7 +40,7 @@ describe('Sync Panel', function () {
     })
   })
 
-  describe('sync options', function () {
+  describe('after sync setup', function () {
     Brave.beforeEach(this)
     beforeEach(function * () {
       yield setup(this.app.client)
@@ -119,6 +119,25 @@ describe('Sync Panel', function () {
         .waitUntil(function () {
           return this.getAppState().then((val) => {
             return val.value.settings['sync.type.bookmark'] === false
+          })
+        })
+    })
+
+    it('shows sync secret words', function * () {
+      const newDeviceButton = '[data-l10n-id="syncNewDevice"]'
+      yield this.app.client
+        .tabByIndex(0)
+        .loadUrl(prefsUrl)
+        .waitForVisible(syncTab)
+        .click(syncTab)
+        .waitForVisible(syncSwitch)
+        .click(syncSwitch)
+        .waitForExist(newDeviceButton)
+        .click(newDeviceButton)
+        .click('[data-l10n-id="syncShowPassphrase"]')
+        .waitUntil(function () {
+          return this.getText('#syncPassphrase').then((text) => {
+            return text === 'a a a a\na a a a\na a a a\na a a a'
           })
         })
     })
