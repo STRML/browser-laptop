@@ -107,6 +107,7 @@
     "prettier-bytes": "^1.0.3",
     "punycode": "^2.0.0",
     "qr-image": "3.2.0",
+    "qrious": "^2.2.0",
     "random-lib": "2.1.0",
     "react": "^15.0.1",
     "react-dnd": "^2.1.4",

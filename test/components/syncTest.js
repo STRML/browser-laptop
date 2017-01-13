@@ -1,9 +1,11 @@
-/* global describe, it, beforeEach */
+/* global describe, it, before, beforeEach */
 
 const Brave = require('../lib/brave')
 const {urlInput, syncTab, syncSwitch} = require('../lib/selectors')
 
 const prefsUrl = 'about:preferences'
+const startButton = '[data-l10n-id="syncStart"]'
+const createButton = '[data-l10n-id="syncCreate"]'
 
 function * setup (client) {
   yield client
@@ -13,10 +15,69 @@ function * setup (client) {
 }
 
 describe('Sync Panel', function () {
-  describe('can enable sync', function () {
+  describe('sync setup', function () {
+    Brave.beforeAll(this)
+    before(function * () {
+      yield setup(this.app.client)
+    })
+
+    it('sync profile can be created', function * () {
+      yield this.app.client
+        .tabByIndex(0)
+        .loadUrl(prefsUrl)
+        .waitForVisible(syncTab)
+        .click(syncTab)
+        .waitForVisible(startButton)
+        .click(startButton)
+        .waitForVisible(createButton)
+        .click(createButton)
+        .windowByUrl(Brave.browserWindowUrl)
+        .waitUntil(function () {
+          return this.getAppState().then((val) => {
+            return val.value.settings['sync.enabled'] === true
+          })
+        })
+    })
+  })
+
+  describe('sync options', function () {
     Brave.beforeEach(this)
     beforeEach(function * () {
       yield setup(this.app.client)
+      yield this.app.client.saveSyncInitData([
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ])
     })
 
     it('sync can be toggled', function * () {
